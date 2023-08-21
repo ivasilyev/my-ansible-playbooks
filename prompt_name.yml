@@ -1,0 +1,16 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}prompt_name.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass -vvvv "${PB_NAME}"
+---
+- hosts: all
+
+  vars_prompt:
+    - name: message
+      prompt: What is your name?
+      private: false
+
+  tasks:
+    - set_fact:
+        message: "Hello {{ message }}!"
+
+  roles:
+    - echo
