@@ -1,0 +1,4 @@
+---
+- name: Reboot and wait 5 min
+  reboot:
+    reboot_timeout: 600
