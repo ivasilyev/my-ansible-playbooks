@@ -1,0 +1,29 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}disable_swap.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+
+- hosts: k8s_cluster:children
+  become: true
+  become_method: sudo
+  tasks:
+
+    - name: Disable swap
+      shell: swapoff -a; sleep 10s
+
+    - name: Erase swap file
+      file:
+        path: /swapfile
+        state: absent
+
+    - name: Backup '/etc/fstab'
+      copy:
+        src: /etc/fstab
+        dest: /etc/fstab_with_swap.bak
+        remote_src: true
+        mode: 0644
+
+    - name: Unmount swap
+      lineinfile:
+        path: /etc/fstab
+        state: present
+        regexp: '^\/swap'
+        line: '# \1'
