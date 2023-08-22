@@ -1,4 +1,5 @@
 ---
 - name: Reboot and wait 5 min
+  become: true
   reboot:
     reboot_timeout: 600
