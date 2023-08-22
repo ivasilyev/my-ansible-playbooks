@@ -1,0 +1,243 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}deploy_node_exporter.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+---
+# - hosts: localhost
+- hosts: all
+  become: true
+  become_method: sudo
+  vars:
+    - web_retries: 3
+    - repo_owner: "prometheus"
+    - repo_name: "node_exporter"
+    - download_tool_dir: "/tmp/{{ repo_name }}/"
+    - install_tool_dir: "/opt/{{ repo_name }}/"
+    - tool_bin: "{{ install_tool_dir }}{{ repo_name }}"
+    - tool_script_file: "{{ install_tool_dir }}{{ repo_name }}.sh"
+    - tool_service_name: "{{ repo_name }}.service"
+    - service_directory: "/etc/systemd/system/"
+    - tool_service_file: "{{ service_directory }}{{ tool_service_name }}"
+    - tool_port: 59182
+    - kernel: "linux"
+    - architecture: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
+    - collector_textfile_directory: "/var/lib/{{ repo_name }}/"
+    - smart_exporter_name: "{{ repo_name }}-smartmon"
+    - smart_exporter_bin: "{{ install_tool_dir }}smartmon-main.sh"
+    - smart_exporter_script_file: "{{ install_tool_dir }}{{ smart_exporter_name }}.sh"
+    - smart_exporter_service_name: "{{ smart_exporter_name }}.service"
+    - smart_exporter_service_file: "{{ service_directory }}{{ smart_exporter_service_name }}"
+  tasks:
+    - name: "Stop and remove service '{{ tool_service_name }}'"
+      ignore_errors: true
+      service:
+        enabled: false
+        state: stopped
+        daemon_reload: true
+        name: "{{ tool_service_name }}"
+
+    - name: "Stop and remove service '{{ smart_exporter_service_name }}'"
+      ignore_errors: true
+      service:
+        enabled: false
+        state: stopped
+        daemon_reload: true
+        name: "{{ smart_exporter_service_name }}"
+
+    - name: "Cleanup"
+      ignore_errors: true
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ download_tool_dir }}"
+        - "{{ install_tool_dir }}"
+        - "{{ tool_service_file }}"
+        - "{{ smart_exporter_service_file }}"
+
+    - name: "Check latest '{{ repo_name }}' version"
+      uri:
+        url: "https://api.github.com/repos/{{ repo_owner }}/{{ repo_name }}/releases/latest"
+        return_content: true
+      register: webpage
+      retries: "{{ web_retries }}"
+
+    - name: "Create directories"
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      loop:
+        - "{{ download_tool_dir }}"
+        - "{{ install_tool_dir }}"
+        - "/var/lib/{{ repo_name }}/"
+
+    - name: "Download latest '{{ repo_name }}' version"
+      loop: "{{ webpage.json.assets }}"
+      when: "architecture in item.name and kernel in item.name"
+      vars:
+        - tool_version: "{{ webpage.json.tag_name }}"
+        - download_tool_uri: "{{ item.browser_download_url }}"
+      unarchive:
+        remote_src: true
+        src: "{{ download_tool_uri }}"
+        dest: "{{ download_tool_dir }}"
+        keep_newer: true
+      retries: "{{ web_retries }}"
+        
+    - name: "Find extracted package"
+      find:
+        file_type: directory
+        paths: "{{ download_tool_dir }}"
+        patterns: "*{{ repo_name }}*"
+        recurse: true
+      register: matched
+
+    - name: "Copy extracted package"
+      copy:
+        src: "{{ matched.files[0].path }}/"
+        dest: "{{ install_tool_dir }}"
+        remote_src: true
+        directory_mode: true
+
+    - name: "Create {{ repo_name }} script file"
+      blockinfile:
+        create: true
+        mode: 0755
+        dest: "{{ tool_script_file }}"
+        marker: "XXX"
+        block: |
+          {{ '#' }}!/usr/bin/env bash
+          sudo "{{ tool_bin }}" \
+              --collector.textfile.directory "{{ collector_textfile_directory }}" \
+              --log.level "error" \
+              --web.listen-address "0.0.0.0:{{ tool_port }}" \
+              --web.max-requests 0 \
+              --web.telemetry-path "/metrics"
+
+    - name: "Create {{ repo_name }} service file"
+      blockinfile:
+        create: true
+        owner: root
+        group: root
+        dest: "{{ tool_service_file }}"    
+        marker: "XXX"
+        block: |
+          [Unit]
+          Description={{ repo_owner }} {{ repo_name }}
+          Documentation=https://github.com/{{ repo_owner }}/{{ repo_name }}
+          Wants=network-online.target
+          After=network-online.target
+          
+          [Service]
+          Type=simple
+          User=root
+          Group=root
+          ExecReload=/bin/kill -HUP {{ '$' }}MAINPID
+          ExecStart=/usr/bin/env sudo /usr/bin/env bash "{{ tool_script_file }}"
+          SyslogIdentifier={{ repo_name }}
+          Restart=on-failure
+          RestartSec=5
+          
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: "Download {{ smart_exporter_name }} text exporter"
+      get_url:
+        url: "https://raw.githubusercontent.com/micha37-martins/S.M.A.R.T-disk-monitoring-for-Prometheus/master/smartmon.sh"
+        dest: "{{ smart_exporter_bin }}"
+        mode: "0744"
+      retries: "{{ web_retries }}"
+
+    - name: "Create {{ smart_exporter_name }} script file"
+      blockinfile:
+        create: true
+        mode: 0755
+        dest: "{{ smart_exporter_script_file }}"
+        marker: "XXX"
+        block: |
+          {{ '#' }}!/usr/bin/env bash
+          while true
+              do
+              bash "{{ smart_exporter_bin }}" > "{{ collector_textfile_directory }}{{ smart_exporter_name }}.prom"
+              sleep 60
+              done
+
+    - name: "Create {{ smart_exporter_name }} service file"
+      blockinfile:
+        create: true
+        owner: root
+        group: root
+        dest: "{{ smart_exporter_service_file }}"  
+        marker: "XXX"        
+        block: |
+          [Unit]
+          Description=S.M.A.R.T.-disk-monitoring-for-Prometheus text_collector
+          Documentation=https://github.com/micha37-martins/S.M.A.R.T-disk-monitoring-for-Prometheus
+          Wants=network-online.target
+          After=network-online.target
+          
+          [Service]
+          Type=simple
+          User=root
+          Group=root
+          ExecReload=/bin/kill -HUP {{ '$' }}MAINPID
+          ExecStart=/usr/bin/env sudo /usr/bin/env bash "{{ smart_exporter_script_file }}"
+          SyslogIdentifier={{ smart_exporter_name }}
+          Restart=always
+          RestartSec=60
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: "Remove marker blockinfile lines"
+      lineinfile:
+        path: "{{ item }}"
+        state: absent
+        regexp: '^XXX$'
+      loop:
+        - "{{ tool_script_file }}"
+        - "{{ tool_service_file }}"
+        - "{{ smart_exporter_script_file }}"
+        - "{{ smart_exporter_service_file }}"
+
+    - name: Update apt cache
+      ignore_errors: true
+      apt:
+        update_cache: true
+
+    - name: Update yum cache
+      ignore_errors: true
+      yum:
+        update_cache: true
+
+    - name: Install smartmontools
+      ignore_errors: true
+      retries: "{{ web_retries }}"
+      package:
+        name: smartmontools
+        state: present
+
+    - name: "Add UFW rules"
+      ignore_errors: true
+      shell: "ufw allow proto tcp to 0.0.0.0/0 port {{ tool_port }} comment 'Listen port for {{ repo_owner }}/{{ repo_name }}'"
+
+    - name: "Install service '{{ tool_service_name }}'"
+      service:
+        enabled: true
+        state: restarted
+        daemon_reload: true
+        name: "{{ tool_service_name }}"
+
+    - name: "Install service '{{ smart_exporter_service_name }}'"
+      service:
+        enabled: true
+        state: restarted
+        daemon_reload: true
+        name: "{{ smart_exporter_service_name }}"
+
+    - name: "Check if server works"
+      ignore_errors: true
+      vars:
+        host_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+      uri:
+        url: "http://{{ host_ip }}:{{ tool_port }}/metrics"
+        return_content: true
