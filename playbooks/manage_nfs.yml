@@ -1,0 +1,29 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}manage_nfs.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+- hosts: k8s_cluster
+  become: true
+  become_method: sudo
+  tasks:
+
+    - name: Cleanup
+      lineinfile:
+        path: /etc/fstab
+        state: absent
+        regexp: '.*{{ item }}.*'
+      with_items:
+        - '\/data'
+
+    - name: Modify FSTAB
+      lineinfile:
+        path: /etc/fstab
+        state: present
+        line: '{{ item }}'
+      with_items:
+        - 'name.domain:/data /data nfs defaults 0 0'
+
+    - name: Create mount points
+      file:
+        path:
+        - '/data'
+        state: directory
+        mode: 'ugo+rw'
