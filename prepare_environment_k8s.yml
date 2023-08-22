@@ -1,0 +1,43 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}prepare_environment_k8s.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+---
+- hosts: kube_node
+  become: true
+  become_method: sudo
+  tasks:
+
+    - name: Remove packages
+      apt:
+        name:
+          - containerd.io
+          - docker-ce-cli
+        state: absent
+        purge: yes
+
+    - name: Clean apt
+      apt:
+        autoremove : yes
+        autoclean: yes
+
+    - name: Add primary NTP server
+      lineinfile: 
+        path: /etc/systemd/timesyncd.conf
+        regexp: '^(NTP=).*$'
+        replace: '\1time.nist.gov'
+
+    - name: Add fallback NTP server
+      lineinfile: 
+        path: /etc/systemd/timesyncd.conf
+        regexp: '^(FallbackNTP=).*$'
+        replace: '\1time.windows.com'
+
+    - name: Restart time sync service
+      service:
+        enabled: true
+        state: restarted
+        daemon_reload: true
+        name: systemd-timesyncd.service
+
+    - name: Sync time
+      ignore_errors: true
+      shell: timedatectl set-ntp true
