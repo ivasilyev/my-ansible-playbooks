@@ -1,0 +1,12 @@
+---
+- name: Update apt cache
+  become: true
+  ignore_errors: true
+  apt:
+    update_cache: true
+
+- name: Update yum cache
+  become: true
+  ignore_errors: true
+  yum:
+    update_cache: true
