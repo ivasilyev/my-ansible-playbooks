@@ -1,0 +1,36 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}upgrade_release.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+---
+- hosts: kube_node
+  become: true
+  become_method: sudo
+  tasks:
+    - name: Reconfigure dpkg
+      shell: dpkg --configure --pending
+
+    - name: Upgrade kernel
+      apt:
+        update_cache: true
+        upgrade: dist
+        autoremove: true
+
+    - name: Install updater
+      apt:
+        name: update-manager-core
+        state: present
+
+    - name: Run do-release-upgrade non-interactively
+      ignore_errors: true
+      shell: echo "N N N N N N N N N N" | do-release-upgrade --frontend DistUpgradeViewNonInteractive
+
+    - name: Reboot
+      ignore_errors: true
+      reboot:
+        reboot_timeout: 600
+
+    - name: Print system details
+      debug: msg="{{ item }}"
+      with_items:
+      - "{{ ansible_distribution }}"
+      - "{{ ansible_distribution_release }}"
+      - "{{ ansible_distribution_version }}"
