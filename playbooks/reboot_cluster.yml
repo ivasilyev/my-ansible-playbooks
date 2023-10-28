@@ -1,0 +1,10 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}reboot_cluster.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+---
+- hosts: k8s_cluster:children
+  become: true
+  become_method: sudo
+  ignore_errors: yes
+  roles:
+
+    - reboot
