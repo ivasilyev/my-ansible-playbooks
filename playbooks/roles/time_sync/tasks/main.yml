@@ -1,15 +1,27 @@
 ---
-- name: Install packages
+- name: Install apt packages
+  become: true
+  ignore_errors: true
   apt:
     name:
       - ntpdate
     state: present
 
+- name: Install yum packages
+  become: true
+  ignore_errors: true
+  yum:
+    name:
+      - ntpdate
+    state: present
+
 - name: Create sync time cronjob
+  become: true
   cron:
-    name: "Sync time"
+    name: "Sync time every 6 hours"
     hour: "*/6"
     job: "/usr/sbin/ntpdate -u 'time.nist.gov' > /dev/null 2>&1 &"
 
 - name: Sync time
+  become: true
   shell: "/usr/sbin/ntpdate -u 'time.nist.gov'"
