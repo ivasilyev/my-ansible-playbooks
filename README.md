@@ -12,7 +12,7 @@ git clone "https://github.com/ivasilyev/my-ansible-playbooks.git"
 
 cd "my-ansible-playbooks"
 
-export ANSIBLE_PB_DIR="$(pwd)/playbooks"
+export ANSIBLE_PB_DIR="$(pwd)/playbooks/"
 echo "export ANSIBLE_PB_DIR=\"${ANSIBLE_PB_DIR}\"" \
 | tee -a  "${HOME}/.bashrc"
 # nano "${HOME}/.bashrc"
