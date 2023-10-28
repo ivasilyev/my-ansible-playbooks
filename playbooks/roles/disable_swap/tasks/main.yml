@@ -1,0 +1,29 @@
+---
+- name: Disable swap
+  become: true
+  shell: swapoff -a; sleep 10s
+
+- name: Erase swap file
+  become: true
+  file:
+    path: /swapfile
+    state: absent
+
+- name: Backup '/etc/fstab'
+  become: true
+  copy:
+    src: /etc/fstab
+    dest: /etc/fstab.bak
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0644'
+    backup: true
+
+- name: Unmount swap
+  become: true
+  lineinfile:
+    path: /etc/fstab
+    state: present
+    regexp: '^\/swap'
+    line: '# \1'
