@@ -1,0 +1,17 @@
+# export PB_NAME="${ANSIBLE_PB_DIR}time_sync.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
+# ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
+---
+- hosts: kube_node
+  become: true
+  become_method: sudo
+
+  roles:
+
+    - update_cache
+
+    - time_sync
+
+  tasks:
+
+    - name: Report
+      message: "Done"
