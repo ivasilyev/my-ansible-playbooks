@@ -6,4 +6,5 @@
   become_method: sudo
   ignore_errors: yes
   roles:
-    reboot
+
+    - reboot
