@@ -1,9 +1,15 @@
 # export PB_NAME="${ANSIBLE_PB_DIR}prepare_environment_k8s.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
 # ansible-playbook --ask-pass --ask-become-pass -vvvv "${PB_NAME}"
 ---
-- hosts: kube_node
+- hosts: k8s_cluster:children
   become: true
   become_method: sudo
+  roles:
+
+    - disable_swap
+
+    - clean_package_managers
+
   tasks:
 
     - name: Remove packages
@@ -13,9 +19,3 @@
           - docker-ce-cli
         state: absent
         purge: yes
-
-    - name: Clean apt
-      apt:
-        autoremove : yes
-        autoclean: yes
-

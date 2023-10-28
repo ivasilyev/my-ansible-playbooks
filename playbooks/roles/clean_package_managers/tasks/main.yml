@@ -1,0 +1,7 @@
+---
+- name: Clean apt
+  become: true
+  ignore_errors: true
+  apt:
+    autoremove : yes
+    autoclean: yes

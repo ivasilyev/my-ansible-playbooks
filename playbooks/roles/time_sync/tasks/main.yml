@@ -15,7 +15,7 @@
       - ntpdate
     state: present
 
-# 0 */6 * * * /usr/sbin/ntpdate -u 'time.nist.gov' > /dev/null 2>&1 &
+# * */6 * * * /usr/sbin/ntpdate -u 'time.nist.gov' > /dev/null 2>&1 &
 - name: Create sync time cronjob
   become: true
   cron:
