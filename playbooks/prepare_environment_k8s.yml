@@ -19,25 +19,3 @@
         autoremove : yes
         autoclean: yes
 
-    - name: Add primary NTP server
-      lineinfile: 
-        path: /etc/systemd/timesyncd.conf
-        regexp: '^(NTP=).*$'
-        replace: '\1time.nist.gov'
-
-    - name: Add fallback NTP server
-      lineinfile: 
-        path: /etc/systemd/timesyncd.conf
-        regexp: '^(FallbackNTP=).*$'
-        replace: '\1time.windows.com'
-
-    - name: Restart time sync service
-      service:
-        enabled: true
-        state: restarted
-        daemon_reload: true
-        name: systemd-timesyncd.service
-
-    - name: Sync time
-      ignore_errors: true
-      shell: timedatectl set-ntp true
