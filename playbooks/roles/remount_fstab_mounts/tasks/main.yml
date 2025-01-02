@@ -1,14 +1,9 @@
 ---
-- name: Ensure mount point exists
-  ansible.builtin.file:
-    path: "{{ samba_share.mount_point }}"
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
+- name: Remount all file systems
+  ansible.builtin.command:
+    cmd: mount -o remount -a
+  register: mount_output
 
-- name: Add Samba share entry to /etc/fstab
-  ansible.builtin.lineinfile:
-    path: /etc/fstab
-    line: "//{{ samba_share.server }}{{ samba_share.share_path }} {{ samba_share.mount_point }} cifs credentials=/etc/samba/{{ ansible_hostname }}.credentials,rw,_netdev,iocharset=utf8,sec=ntlm 0 0"
-    state: present
+- name: Display remount results
+  ansible.builtin.debug:
+    msg: "{{ mount_output.stdout }}"

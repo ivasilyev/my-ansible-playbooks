@@ -1,0 +1,8 @@
+---
+ansible_password: "your_password"
+ansible_become_pass: "your_become_password"
+
+# Create:
+# EDITOR=nano ansible-vault create $HOME/.ansible/vault.yml
+# Use:
+# ansible-playbook --extra-vars "@$HOME/.ansible/vault.yml" --ask-vault-pass playbook.yml

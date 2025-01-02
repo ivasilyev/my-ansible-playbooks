@@ -1,6 +1,9 @@
+# export PLAYBOOK_NAME="mount_samba_share.yml" && rm -f "${PLAYBOOK_NAME}" && nano "${PLAYBOOK_NAME}"
+# ansible-playbook --extra-vars "@$HOME/.ansible/vault.yml" --ask-vault-pass -vvvv "${PLAYBOOK_NAME}"
 ---
 - hosts: all
   become: true
+
   roles:
     - update_packages
     - install_packages
@@ -24,7 +27,7 @@
       mount_point: "/mnt/shared"
 
     samba_credentials:
-      file: "/etc/samba/{{ ansible_hostname }}.smbclient"
+      file: "/etc/samba/{{ samba_share.server }}.smbclient"
       username: "your_username"
       password: "your_password"
       domain: "WORKGROUP"
