@@ -1,0 +1,9 @@
+---
+- name: Remount all file systems
+  ansible.builtin.command:
+    cmd: mount -o remount -a
+  register: mount_output
+
+- name: Display remount results
+  ansible.builtin.debug:
+    msg: "{{ mount_output.stdout }}"

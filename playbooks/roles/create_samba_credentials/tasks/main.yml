@@ -1,0 +1,19 @@
+---
+- name: Create Samba credentials file
+  ansible.builtin.file:
+    path: "{{ samba_credentials.file }}"
+    state: touch
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Add Samba credentials to file
+  ansible.builtin.copy:
+    dest: "{{ samba_credentials.file }}"
+    content: |
+      username={{ samba_credentials.username }}
+      password={{ samba_credentials.password }}
+      domain={{ samba_credentials.domain }}
+    owner: root
+    group: root
+    mode: '0600'

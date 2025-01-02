@@ -1,5 +1,5 @@
-# export PB_NAME="${ANSIBLE_PB_DIR}exchange_ssh_keys.yml" && rm -f "${PB_NAME}" && nano "${PB_NAME}"
-# export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook --ask-pass -vvvv "${PB_NAME}"
+# export PLAYBOOK_NAME="${ANSIBLE_PLAYBOOK_DIR}exchange_ssh_keys.yml" && rm -f "${PLAYBOOK_NAME}" && nano "${PLAYBOOK_NAME}"
+# export ANSIBLE_HOST_KEY_CHECKING=False && ansible-playbook --ask-pass -vvvv "${PLAYBOOK_NAME}"
 ---
 - hosts: all
   gather_facts: false
