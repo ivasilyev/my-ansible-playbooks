@@ -1,14 +1,16 @@
 ---
 - name: Ensure mount point exists
+  loop: "{{ samba_shares }}"
   ansible.builtin.file:
-    path: "{{ samba_share.mount_point }}"
+    path: "{{ item.mount_point }}"
     state: directory
     owner: root
     group: root
     mode: '0777'
 
 - name: Add Samba share entry to /etc/fstab
+  loop: "{{ samba_shares }}"
   ansible.builtin.lineinfile:
     path: /etc/fstab
-    line: "//{{ samba_share.server }}{{ samba_share.share_path }} {{ samba_share.mount_point }} cifs credentials=/etc/samba/{{ ansible_hostname }}.credentials,rw,_netdev,iocharset=utf8 0 0"
+    line: "//{{ item.server }}{{ item.share_path }} {{ item.mount_point }} cifs credentials=/etc/samba/{{ ansible_hostname }}.credentials,rw,_netdev,iocharset=utf8 0 0"
     state: present

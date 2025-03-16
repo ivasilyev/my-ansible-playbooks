@@ -21,13 +21,20 @@
       - smbclient
       - wsdd
 
-    samba_share:
-      server: "smb.example.com"
-      share_path: "/shared"
-      mount_point: "/mnt/shared"
+    samba_shares:
+      - server: "smb.example1.com"
+        share_path: "/shared"
+        mount_point: "/mnt/shared1"
+      - server: "smb.example2.com"
+        share_path: "/shared"
+        mount_point: "/mnt/shared2"
 
     samba_credentials:
-      file: "/etc/samba/{{ samba_share.server }}.smbclient"
-      username: "your_username"
-      password: "your_password"
-      domain: "WORKGROUP"
+      - file: "/etc/samba/smb.example1.com.smbclient"
+        username: "your_username1"
+        password: "your_password1"
+        domain: "WORKGROUP"
+      - file: "/etc/samba/smb.example2.com.smbclient"
+        username: "your_username2"
+        password: "your_password2"
+        domain: "WORKGROUP"
