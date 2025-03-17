@@ -12,5 +12,5 @@
   loop: "{{ samba_shares }}"
   ansible.builtin.lineinfile:
     path: /etc/fstab
-    line: "//{{ item.server }}{{ item.share_path }} {{ item.mount_point }} cifs credentials=/etc/samba/{{ ansible_hostname }}.credentials,rw,_netdev,iocharset=utf8 0 0"
+    line: "//{{ item.server }}{{ item.share_path }} {{ item.mount_point }} cifs credentials=/etc/samba/{{ item.server }}.smbclient,rw,_netdev,iocharset=utf8 0 0"
     state: present

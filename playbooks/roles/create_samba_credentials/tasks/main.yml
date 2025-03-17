@@ -1,6 +1,6 @@
 ---
 - name: Create Samba credentials file
-  loop: "{{ samba_credentials }}"
+  loop: "{{ samba_shares }}"
   ansible.builtin.file:
     path: "{{ item.file }}"
     state: touch
@@ -9,10 +9,11 @@
     mode: '0600'
 
 - name: Add Samba credentials to file
-  loop: "{{ samba_credentials }}"
+  loop: "{{ samba_shares }}"
   ansible.builtin.copy:
-    dest: "{{ item.file }}"
+    dest: "/etc/samba/{{ item.server }}.smbclient"
     content: |
+      # {{ item.server }}
       username={{ item.username }}
       password={{ item.password }}
       domain={{ item.domain }}
