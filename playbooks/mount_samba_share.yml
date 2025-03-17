@@ -1,5 +1,6 @@
 # export PLAYBOOK_NAME="mount_samba_share.yml" && rm -f "${PLAYBOOK_NAME}" && nano "${PLAYBOOK_NAME}"
 # ansible-playbook --extra-vars "@$HOME/.ansible/vault.yml" --ask-vault-pass -vvvv "${PLAYBOOK_NAME}"
+# ansible-playbook -i "${APB_HOSTS}" --ask-pass --ask-become-pass "${PLAYBOOK_NAME}"
 ---
 - hosts: all
   become: true

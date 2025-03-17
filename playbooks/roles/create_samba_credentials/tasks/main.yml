@@ -2,7 +2,7 @@
 - name: Create Samba credentials file
   loop: "{{ samba_shares }}"
   ansible.builtin.file:
-    path: "{{ item.file }}"
+    path: "/etc/samba/{{ item.server }}.smbclient"
     state: touch
     owner: root
     group: root
