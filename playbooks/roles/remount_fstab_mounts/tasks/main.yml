@@ -1,8 +1,9 @@
 ---
 - name: Partial remount
+  ignore_errors: true
   loop: "{{ samba_shares }}"
   ansible.builtin.command:
-    cmd: mount //{{ item.server }}{{ item.share_path }} {{ item.mount_point }} -t cifs -o credentials=/etc/samba/{{ item.server }}.smbclient,rw,_netdev,iocharset=utf8
+    cmd: mount //{{ item.server }}{{ item.share_path }} {{ item.mount_point }} -t cifs -o credentials=/etc/samba/{{ item.server }}.smbclient,rw
 
 - name: Remount all file systems
   ignore_errors: true
